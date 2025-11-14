@@ -2,10 +2,10 @@
 
 A simple console application for managing coffee inventory and tracking sales for your roasting business. Supports both interactive menu mode and command-line interface, with automatic syncing to your API server.
 
-[![Build and Release](https://github.com/YOUR_USERNAME/CoffeeManagementSoftware/actions/workflows/release.yml/badge.svg)](https://github.com/YOUR_USERNAME/CoffeeManagementSoftware/actions/workflows/release.yml)
-[![Latest Release](https://img.shields.io/github/v/release/YOUR_USERNAME/CoffeeManagementSoftware)](https://github.com/YOUR_USERNAME/CoffeeManagementSoftware/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/YOUR_USERNAME/CoffeeManagementSoftware/total)](https://github.com/YOUR_USERNAME/CoffeeManagementSoftware/releases)
-[![License](https://img.shields.io/github/license/YOUR_USERNAME/CoffeeManagementSoftware)](LICENSE)
+[![Build and Release](https://github.com/jpalenchar/CoffeeManagementSoftware/actions/workflows/release.yml/badge.svg)](https://github.com/jpalenchar/CoffeeManagementSoftware/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/jpalenchar/CoffeeManagementSoftware)](https://github.com/jpalenchar/CoffeeManagementSoftware/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/jpalenchar/CoffeeManagementSoftware/total)](https://github.com/jpalenchar/CoffeeManagementSoftware/releases)
+[![License](https://img.shields.io/github/license/jpalenchar/CoffeeManagementSoftware)](LICENSE)
 
 ## Features
 
