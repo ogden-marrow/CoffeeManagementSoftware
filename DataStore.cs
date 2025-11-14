@@ -7,7 +7,8 @@ public static class DataStore
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        TypeInfoResolver = CoffeeJsonContext.Default
     };
 
     public static string GetInventoryPath(string[]? commandArgs = null)

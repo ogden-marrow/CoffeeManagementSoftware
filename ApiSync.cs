@@ -68,10 +68,7 @@ public static class ApiSync
                 coffee.ImageUrl = "";
             }
 
-            var json = JsonSerializer.Serialize(coffee, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var json = JsonSerializer.Serialize(coffee, ApiJsonContext.Default.Coffee);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response;
