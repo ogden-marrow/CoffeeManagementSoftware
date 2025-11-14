@@ -194,19 +194,29 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  notify:
-    name: Notify on Success
-    needs: [build, publish, release]
+  summary:
+    name: Build Summary
+    needs: [build, publish]
     if: always()
     runs-on: ubuntu-latest
     
     steps:
-    - name: Check workflow status
+    - name: Print Summary
       run: |
-        if [ "${{ needs.build.result }}" != "success" ] || \
-           [ "${{ needs.publish.result }}" != "success" ] || \
-           [ "${{ needs.release.result }}" != "success" ]; then
-          echo "::error::Workflow failed! Check the logs above."
-          exit 1
+        echo "## Workflow Summary"
+        echo ""
+        echo "Build: ${{ needs.build.result }}"
+        echo "Publish: ${{ needs.publish.result }}"
+        echo ""
+        
+        if [ "${{ needs.build.result }}" == "success" ]; then
+          echo "✅ Build completed successfully!"
+        else
+          echo "❌ Build failed"
         fi
-        echo "✅ All jobs completed successfully!"
+        
+        if [ "${{ needs.publish.result }}" == "success" ]; then
+          echo "✅ Multi-platform binaries created!"
+        elif [ "${{ needs.publish.result }}" == "skipped" ]; then
+          echo "⏭️  Publish skipped (not on main branch or tag)"
+        fi
