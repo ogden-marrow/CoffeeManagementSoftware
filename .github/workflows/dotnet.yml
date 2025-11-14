@@ -1,28 +1,212 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: .NET
+name: Build and Release
 
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_NAME: 'CoffeeManagementSoftware'
 
 jobs:
   build:
-
+    name: Build and Test
     runs-on: ubuntu-latest
-
+    
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
     - name: Restore dependencies
       run: dotnet restore
+    
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --configuration Release --no-restore
+    
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          **/bin/Release/**
+          !**/bin/Release/**/ref/**
+          !**/bin/Release/**/*.pdb
+        retention-days: 5
+
+  publish:
+    name: Publish Multi-Platform Binaries
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        runtime:
+          - win-x64
+          - win-x86
+          - linux-x64
+          - linux-arm64
+          - osx-x64
+          - osx-arm64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Publish ${{ matrix.runtime }}
+      run: |
+        dotnet publish \
+          --configuration Release \
+          --runtime ${{ matrix.runtime }} \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:PublishTrimmed=true \
+          -p:TrimMode=partial \
+          --output ./publish/${{ matrix.runtime }}
+    
+    - name: Create archive (Windows)
+      if: startsWith(matrix.runtime, 'win')
+      run: |
+        cd publish/${{ matrix.runtime }}
+        zip -r ../../${{ env.PROJECT_NAME }}-${{ matrix.runtime }}.zip .
+    
+    - name: Create archive (Unix)
+      if: startsWith(matrix.runtime, 'linux') || startsWith(matrix.runtime, 'osx')
+      run: |
+        cd publish/${{ matrix.runtime }}
+        tar -czf ../../${{ env.PROJECT_NAME }}-${{ matrix.runtime }}.tar.gz .
+    
+    - name: Upload platform artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}
+        path: |
+          ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}.zip
+          ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}.tar.gz
+        retention-days: 30
+
+  release:
+    name: Create GitHub Release
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-artifacts
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Extract version from tag
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Generate changelog from git commits since last tag
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        if [ -z "$PREVIOUS_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        else
+          CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+        fi
+        
+        # Create changelog file
+        cat > RELEASE_NOTES.md << EOF
+        ## Coffee Management Software v${VERSION}
+        
+        ### What's Changed
+        ${CHANGELOG}
+        
+        ### Installation
+        
+        Download the appropriate version for your platform:
+        
+        **Windows:**
+        - \`CoffeeManagementSoftware-win-x64.zip\` (64-bit)
+        - \`CoffeeManagementSoftware-win-x86.zip\` (32-bit)
+        
+        **Linux:**
+        - \`CoffeeManagementSoftware-linux-x64.tar.gz\` (x86_64)
+        - \`CoffeeManagementSoftware-linux-arm64.tar.gz\` (ARM64)
+        
+        **macOS:**
+        - \`CoffeeManagementSoftware-osx-x64.tar.gz\` (Intel)
+        - \`CoffeeManagementSoftware-osx-arm64.tar.gz\` (Apple Silicon)
+        
+        ### Quick Start
+        
+        1. Extract the archive
+        2. Run the executable:
+           - Windows: \`CoffeeManagementSoftware.exe\`
+           - Linux/macOS: \`./CoffeeManagementSoftware\`
+        3. Configure your API settings in \`inventory.json\`
+        
+        For detailed documentation, see the [README](https://github.com/${{ github.repository }}/blob/main/README.md).
+        EOF
+        
+        echo "Created release notes for version $VERSION"
+    
+    - name: Organize release files
+      run: |
+        mkdir -p release-files
+        find release-artifacts -type f \( -name "*.zip" -o -name "*.tar.gz" \) -exec cp {} release-files/ \;
+        ls -lh release-files/
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ steps.changelog.outputs.version }}
+        body_path: RELEASE_NOTES.md
+        files: release-files/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify on Success
+    needs: [build, publish, release]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check workflow status
+      run: |
+        if [ "${{ needs.build.result }}" != "success" ] || \
+           [ "${{ needs.publish.result }}" != "success" ] || \
+           [ "${{ needs.release.result }}" != "success" ]; then
+          echo "::error::Workflow failed! Check the logs above."
+          exit 1
+        fi
+        echo "✅ All jobs completed successfully!"
