@@ -1,0 +1,25 @@
+{
+  "apiUrl": "https://api.weroasting.com",
+  "apiKey": "your-api-key-here",
+  "coffees": [
+    {
+      "id": "example123456",
+      "name": "Sample Ethiopian",
+      "origin": "Ethiopia",
+      "roastLevel": "Light",
+      "description": "Bright and floral with notes of blueberry and jasmine",
+      "pricePerPound": 18.50,
+      "stockQuantity": 50,
+      "flavorNotes": [
+        "Blueberry",
+        "Jasmine",
+        "Citrus"
+      ],
+      "imageUrl": null,
+      "isAvailable": true,
+      "roastedDate": "2025-11-13T10:00:00Z",
+      "createdAt": "2025-11-13T10:00:00Z",
+      "updatedAt": "2025-11-13T10:00:00Z"
+    }
+  ]
+}

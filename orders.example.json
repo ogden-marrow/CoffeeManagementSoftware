@@ -1,0 +1,13 @@
+{
+  "orders": [
+    {
+      "id": "order123456",
+      "coffeeId": "example123456",
+      "coffeeName": "Sample Ethiopian",
+      "quantityPounds": 2.5,
+      "pricePerPound": 18.50,
+      "totalPrice": 46.25,
+      "orderDate": "2025-11-13T14:20:00Z"
+    }
+  ]
+}
