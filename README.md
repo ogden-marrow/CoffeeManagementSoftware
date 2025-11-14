@@ -1,6 +1,8 @@
 # Coffee Management Software
 [![Build and Release](https://github.com/ogden-marrow/CoffeeManagementSoftware/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ogden-marrow/CoffeeManagementSoftware/actions/workflows/dotnet.yml)
 
+[![Continous Intigration Bulid](https://github.com/ogden-marrow/CoffeeManagementSoftware/actions/workflows/testbulid.yml/badge.svg)](https://github.com/ogden-marrow/CoffeeManagementSoftware/actions/workflows/testbulid.yml)
+
 A simple console application for managing coffee inventory and tracking sales for your roasting business. Supports both interactive menu mode and command-line interface, with automatic syncing to your API server.
 
 
