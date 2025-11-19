@@ -40,7 +40,11 @@ public static class ApiSync
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            var apiCoffees = JsonSerializer.Deserialize<List<Coffee>>(json, ApiJsonContext.Default.Options);
+            var apiCoffees = JsonSerializer.Deserialize<List<Coffee>>(json, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true
+            });
 
             if (apiCoffees == null || apiCoffees.Count == 0)
             {
