@@ -29,12 +29,13 @@ Main Menu:
 4. List All Coffees
 5. Record Order/Sale
 6. View Sales Report
-7. Sync to API
-8. Switch to Auto-Sync Mode
-9. Exit
+7. Sync to API (Push)
+8. Pull from API
+9. Switch to Auto-Sync Mode
+10. Exit
 
 ");
-            Console.Write("Select option (1-9): ");
+            Console.Write("Select option (1-10): ");
             var choice = Console.ReadLine()?.Trim();
 
             try
@@ -63,10 +64,13 @@ Main Menu:
                         await SyncToApiInteractive(inventoryPath);
                         break;
                     case "8":
+                        await PullFromApiInteractive(inventoryPath);
+                        break;
+                    case "9":
                         Console.WriteLine("\nStarting auto-sync mode...");
                         await AutoMode.RunAsync(Array.Empty<string>());
                         return;
-                    case "9":
+                    case "10":
                         Console.WriteLine("\nGoodbye!");
                         return;
                     default:
@@ -461,7 +465,7 @@ Main Menu:
 
     private static async Task SyncToApiInteractive(string inventoryPath)
     {
-        Console.WriteLine("\n=== Sync to API ===\n");
+        Console.WriteLine("\n=== Sync to API (Push) ===\n");
 
         var inventory = await DataStore.LoadInventoryAsync(inventoryPath);
 
@@ -479,5 +483,40 @@ Main Menu:
         }
 
         await ApiSync.SyncInventoryAsync(inventory);
+    }
+
+    private static async Task PullFromApiInteractive(string inventoryPath)
+    {
+        Console.WriteLine("\n=== Pull from API ===\n");
+
+        var inventory = await DataStore.LoadInventoryAsync(inventoryPath);
+
+        Console.WriteLine($"API URL: {inventory.ApiUrl}");
+        Console.WriteLine();
+
+        Console.Write("Testing API connection... ");
+        var connected = await ApiSync.TestConnectionAsync(inventory.ApiUrl);
+        Console.WriteLine(connected ? "✓ Connected" : "✗ Failed");
+
+        if (!connected)
+        {
+            Console.WriteLine("Error: Could not connect to API");
+            return;
+        }
+
+        // Warn about overwriting local data
+        if (inventory.Coffees.Count > 0)
+        {
+            Console.WriteLine($"\n⚠️  WARNING: This will replace your {inventory.Coffees.Count} local coffees with data from the API!");
+            Console.Write("Continue? (y/n): ");
+            var confirm = Console.ReadLine()?.ToLower();
+            if (confirm != "y" && confirm != "yes")
+            {
+                Console.WriteLine("Pull cancelled.");
+                return;
+            }
+        }
+
+        await ApiSync.PullInventoryAsync(inventory, inventoryPath);
     }
 }
