@@ -10,7 +10,7 @@ A simple console application for managing coffee inventory and tracking sales fo
 
 - **Dual Interface**: Interactive menu mode or command-line arguments
 - **Auto-Sync Mode**: Watches inventory file and automatically syncs changes to API
-- **Inventory Management**: Add coffees, update stock quantities
+- **Inventory Management**: Add coffees, update stock quantities (in bags)
 - **Order Tracking**: Record sales and track volume without customer data
 - **Sales Reports**: View sales statistics and trends
 - **API Integration**: Syncs inventory to your WeRoasting API server
@@ -64,7 +64,7 @@ dotnet run list
 
 #### Record a Sale/Order
 ```bash
-dotnet run order <coffee-id> --quantity 2.5
+dotnet run order <coffee-id> --quantity 2
 ```
 
 #### View Sales Report
@@ -108,10 +108,10 @@ Stores coffee inventory and API configuration:
       "origin": "Ethiopia",
       "roastLevel": "Light",
       "description": "Bright and floral",
-      "pricePerPound": 18.50,
+      "pricePerBag": 18.50,
       "stockQuantity": 50,
       "flavorNotes": ["Blueberry", "Jasmine", "Citrus"],
-      "imageUrl": null,
+      "imageUrl": "",
       "isAvailable": true,
       "roastedDate": "2025-11-13T10:30:00Z",
       "createdAt": "2025-11-13T10:30:00Z",
@@ -130,9 +130,9 @@ Tracks sales/orders without customer information:
       "id": "xyz789abc123",
       "coffeeId": "abc123def456",
       "coffeeName": "Ethiopian Yirgacheffe",
-      "quantityPounds": 2.5,
-      "pricePerPound": 18.50,
-      "totalPrice": 46.25,
+      "quantityBags": 2,
+      "pricePerBag": 18.50,
+      "totalPrice": 37.00,
       "orderDate": "2025-11-13T14:20:00Z"
     }
   ]
@@ -160,8 +160,8 @@ dotnet run add --name "Colombian Supremo" --origin "Colombia" --roast "Medium" -
 ```
 
 ### Recording Daily Sales
-1. Use interactive menu option 4, or
-2. Use command line: `dotnet run order <coffee-id> --quantity 3.0`
+1. Use interactive menu option 5, or
+2. Use command line: `dotnet run order <coffee-id> --quantity 3`
 
 ### Weekly Sales Review
 ```bash
@@ -184,7 +184,7 @@ The API URL and API key are stored in `inventory.json`:
 }
 ```
 
-The API key is sent in the `X-API-Key` header with every request.
+The API key is sent in the `X-Deploy-Key` header with every request.
 
 The application will sync to these endpoints:
 - `POST /api/Coffee` - Create new coffee
@@ -195,7 +195,7 @@ The application will sync to these endpoints:
 
 The report shows:
 - Total orders and revenue
-- Total pounds sold
+- Total bags sold
 - Average order value
 - Sales breakdown by coffee type
 - Recent order history
@@ -206,15 +206,15 @@ Sales Report (Last 30 days)
 ================================================================================
 Total Orders: 45
 Total Revenue: $892.50
-Total Pounds Sold: 87.50
+Total Bags Sold: 87
 Average Order Value: $19.83
 
 Sales by Coffee:
 --------------------------------------------------------------------------------
 Ethiopian Yirgacheffe
-  Orders: 18 | Pounds: 35.50 | Revenue: $656.75
+  Orders: 18 | Bags: 35 | Revenue: $656.75
 Colombian Supremo
-  Orders: 15 | Pounds: 32.00 | Revenue: $512.00
+  Orders: 15 | Bags: 32 | Revenue: $512.00
 ```
 
 ## Tips
@@ -224,6 +224,7 @@ Colombian Supremo
 - Use command-line mode for scripting or automation
 - Check the sales report weekly to understand your best sellers
 - The system auto-generates IDs for new coffees and orders
+- Stock is tracked in bags (not pounds) to match the API schema
 
 ## License
 

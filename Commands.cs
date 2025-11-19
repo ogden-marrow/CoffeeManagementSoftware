@@ -33,7 +33,7 @@ Examples:
   CoffeeManagementSoftware update <id> --stock 25
   CoffeeManagementSoftware toggle <id>
   CoffeeManagementSoftware list
-  CoffeeManagementSoftware order <coffee-id> --quantity 2.5
+  CoffeeManagementSoftware order <coffee-id> --quantity 2
   CoffeeManagementSoftware report --days 30
   CoffeeManagementSoftware sync
 ");
@@ -74,7 +74,7 @@ Examples:
             Origin = origin,
             RoastLevel = roast,
             Description = description,
-            PricePerPound = price,
+            PricePerBag = price,
             StockQuantity = stock,
             FlavorNotes = flavorNotes,
             ImageUrl = imageUrl ?? "",
@@ -90,8 +90,8 @@ Examples:
         Console.WriteLine($"✓ Coffee added successfully!");
         Console.WriteLine($"  ID: {coffee.Id}");
         Console.WriteLine($"  Name: {coffee.Name}");
-        Console.WriteLine($"  Price: ${coffee.PricePerPound:F2}/lb");
-        Console.WriteLine($"  Stock: {coffee.StockQuantity} lbs");
+        Console.WriteLine($"  Price: ${coffee.PricePerBag:F2}/bag");
+        Console.WriteLine($"  Stock: {coffee.StockQuantity} bags");
 
         // Ask if they want to sync
         Console.Write("\nSync to API now? (y/n): ");
@@ -138,8 +138,8 @@ Examples:
         await DataStore.SaveInventoryAsync(inventoryPath, inventory);
 
         Console.WriteLine($"✓ Stock updated for '{coffee.Name}'");
-        Console.WriteLine($"  Old stock: {oldStock} lbs");
-        Console.WriteLine($"  New stock: {newStock} lbs");
+        Console.WriteLine($"  Old stock: {oldStock} bags");
+        Console.WriteLine($"  New stock: {newStock} bags");
 
         Console.Write("\nSync to API now? (y/n): ");
         var sync = Console.ReadLine()?.ToLower();
@@ -168,7 +168,7 @@ Examples:
             var availability = coffee.IsAvailable ? "✓" : "✗";
             Console.WriteLine($"{availability} [{coffee.Id}] {coffee.Name}");
             Console.WriteLine($"   Origin: {coffee.Origin} | Roast: {coffee.RoastLevel}");
-            Console.WriteLine($"   Price: ${coffee.PricePerPound:F2}/lb | Stock: {coffee.StockQuantity} lbs");
+            Console.WriteLine($"   Price: ${coffee.PricePerBag:F2}/bag | Stock: {coffee.StockQuantity} bags");
             if (coffee.FlavorNotes.Count > 0)
             {
                 Console.WriteLine($"   Flavors: {string.Join(", ", coffee.FlavorNotes)}");
@@ -182,14 +182,14 @@ Examples:
         if (commandArgs.Length < 2)
         {
             Console.WriteLine("Error: Missing coffee ID");
-            Console.WriteLine("Usage: order <coffee-id> --quantity <pounds>");
+            Console.WriteLine("Usage: order <coffee-id> --quantity <bags>");
             return;
         }
 
         var coffeeId = commandArgs[1];
         var quantityStr = GetArgValue(commandArgs, "--quantity");
 
-        if (string.IsNullOrEmpty(quantityStr) || !double.TryParse(quantityStr, out var quantity) || quantity <= 0)
+        if (string.IsNullOrEmpty(quantityStr) || !int.TryParse(quantityStr, out var quantity) || quantity <= 0)
         {
             Console.WriteLine("Error: Invalid or missing --quantity value");
             return;
@@ -210,7 +210,7 @@ Examples:
 
         if (coffee.StockQuantity < quantity)
         {
-            Console.WriteLine($"Error: Insufficient stock. Available: {coffee.StockQuantity} lbs");
+            Console.WriteLine($"Error: Insufficient stock. Available: {coffee.StockQuantity} bags");
             return;
         }
 
@@ -220,9 +220,9 @@ Examples:
             Id = DataStore.GenerateId(),
             CoffeeId = coffee.Id,
             CoffeeName = coffee.Name,
-            QuantityPounds = quantity,
-            PricePerPound = coffee.PricePerPound,
-            TotalPrice = quantity * coffee.PricePerPound,
+            QuantityBags = quantity,
+            PricePerBag = coffee.PricePerBag,
+            TotalPrice = quantity * coffee.PricePerBag,
             OrderDate = DateTime.UtcNow
         };
 
@@ -230,7 +230,7 @@ Examples:
         await DataStore.SaveOrdersAsync(ordersPath, orders);
 
         // Update inventory
-        coffee.StockQuantity -= (int)Math.Ceiling(quantity);
+        coffee.StockQuantity -= quantity;
         coffee.IsAvailable = coffee.StockQuantity > 0;
         coffee.UpdatedAt = DateTime.UtcNow;
         await DataStore.SaveInventoryAsync(inventoryPath, inventory);
@@ -238,9 +238,9 @@ Examples:
         Console.WriteLine($"✓ Order recorded successfully!");
         Console.WriteLine($"  Order ID: {order.Id}");
         Console.WriteLine($"  Coffee: {coffee.Name}");
-        Console.WriteLine($"  Quantity: {quantity} lbs");
+        Console.WriteLine($"  Quantity: {quantity} bags");
         Console.WriteLine($"  Total: ${order.TotalPrice:F2}");
-        Console.WriteLine($"  Remaining stock: {coffee.StockQuantity} lbs");
+        Console.WriteLine($"  Remaining stock: {coffee.StockQuantity} bags");
 
         Console.Write("\nSync inventory to API now? (y/n): ");
         var sync = Console.ReadLine()?.ToLower();
@@ -274,11 +274,11 @@ Examples:
         }
 
         var totalRevenue = recentOrders.Sum(o => o.TotalPrice);
-        var totalPounds = recentOrders.Sum(o => o.QuantityPounds);
+        var totalBags = recentOrders.Sum(o => o.QuantityBags);
 
         Console.WriteLine($"Total Orders: {recentOrders.Count}");
         Console.WriteLine($"Total Revenue: ${totalRevenue:F2}");
-        Console.WriteLine($"Total Pounds Sold: {totalPounds:F2}");
+        Console.WriteLine($"Total Bags Sold: {totalBags}");
         Console.WriteLine($"Average Order Value: ${(totalRevenue / recentOrders.Count):F2}");
         Console.WriteLine();
 
@@ -289,7 +289,7 @@ Examples:
             {
                 Name = g.Key,
                 OrderCount = g.Count(),
-                TotalPounds = g.Sum(o => o.QuantityPounds),
+                TotalBags = g.Sum(o => o.QuantityBags),
                 TotalRevenue = g.Sum(o => o.TotalPrice)
             })
             .OrderByDescending(s => s.TotalRevenue)
@@ -300,7 +300,7 @@ Examples:
         foreach (var sale in salesByCoffee)
         {
             Console.WriteLine($"{sale.Name}");
-            Console.WriteLine($"  Orders: {sale.OrderCount} | Pounds: {sale.TotalPounds:F2} | Revenue: ${sale.TotalRevenue:F2}");
+            Console.WriteLine($"  Orders: {sale.OrderCount} | Bags: {sale.TotalBags} | Revenue: ${sale.TotalRevenue:F2}");
         }
     }
 

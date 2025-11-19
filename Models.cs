@@ -19,11 +19,11 @@ public class Coffee
     [JsonPropertyName("description")]
     public string Description { get; set; } = string.Empty;
 
-    [JsonPropertyName("pricePerPound")]
-    public double PricePerPound { get; set; }
+    [JsonPropertyName("pricePerBag")]
+    public double PricePerBag { get; set; }
 
     [JsonPropertyName("stockQuantity")]
-    public int StockQuantity { get; set; }
+    public int StockQuantity { get; set; } // in Bags
 
     [JsonPropertyName("flavorNotes")]
     public List<string> FlavorNotes { get; set; } = new();
@@ -67,11 +67,11 @@ public class Order
     [JsonPropertyName("coffeeName")]
     public string CoffeeName { get; set; } = string.Empty;
 
-    [JsonPropertyName("quantityPounds")]
-    public double QuantityPounds { get; set; }
+    [JsonPropertyName("quantityBags")]
+    public int QuantityBags { get; set; }
 
-    [JsonPropertyName("pricePerPound")]
-    public double PricePerPound { get; set; }
+    [JsonPropertyName("pricePerBag")]
+    public double PricePerBag { get; set; }
 
     [JsonPropertyName("totalPrice")]
     public double TotalPrice { get; set; }

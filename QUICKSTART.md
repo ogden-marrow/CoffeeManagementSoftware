@@ -17,7 +17,8 @@
    Edit `inventory.json` and update the `apiUrl` field:
    ```json
    {
-     "apiUrl": "https://api.weroasting.com",
+     "apiUrl": "https://weroasting.com",
+     "apiKey": "your-api-key-here",
      "coffees": []
    }
    ```
@@ -43,12 +44,13 @@ dotnet run
 Then select from the menu:
 - **1** - Add new coffee
 - **2** - Update stock
-- **3** - List coffees
-- **4** - Record sale
-- **5** - View report
-- **6** - Sync to API
-- **7** - Switch to auto-sync
-- **8** - Exit
+- **3** - Toggle availability
+- **4** - List coffees
+- **5** - Record sale
+- **6** - View report
+- **7** - Sync to API
+- **8** - Switch to auto-sync
+- **9** - Exit
 
 ### Option 3: Command Line
 Quick operations without menus:
@@ -57,8 +59,8 @@ Quick operations without menus:
 # Add a coffee
 dotnet run add --name "Guatemalan Antigua" --origin "Guatemala" --roast "Medium" --price 17.00 --stock 30
 
-# Record a sale
-dotnet run order <coffee-id> --quantity 2.0
+# Record a sale (in bags)
+dotnet run order <coffee-id> --quantity 2
 
 # View sales report
 dotnet run report --days 7
@@ -78,8 +80,8 @@ dotnet run list
 2. Or: `dotnet run add --name "..." --origin "..." --roast "..." --price X.XX --stock XX`
 
 ### Recording Sales
-1. Interactive menu → Option 4 (Record Order)
-2. Or: `dotnet run order <coffee-id> --quantity X.X`
+1. Interactive menu → Option 5 (Record Order)
+2. Or: `dotnet run order <coffee-id> --quantity X`
 
 ### End of Week Review
 ```bash
@@ -104,6 +106,7 @@ dotnet run list --inventory-path /path/to/inventory.json
 ✓ Check sales reports weekly  
 ✓ System auto-generates IDs - no need to track them  
 ✓ Stock automatically decreases when you record orders  
+✓ All quantities are in **bags** (not pounds) to match API schema  
 
 ## Troubleshooting
 

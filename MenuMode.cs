@@ -98,10 +98,10 @@ Main Menu:
         Console.Write("Roast level (Light/Medium/Dark): ");
         var roast = Console.ReadLine()?.Trim();
 
-        Console.Write("Price per pound ($): ");
+        Console.Write("Price per bag ($): ");
         var priceStr = Console.ReadLine()?.Trim();
 
-        Console.Write("Initial stock (lbs): ");
+        Console.Write("Initial stock (bags): ");
         var stockStr = Console.ReadLine()?.Trim();
 
         Console.Write("Description (optional): ");
@@ -133,7 +133,7 @@ Main Menu:
             Origin = origin,
             RoastLevel = roast,
             Description = description,
-            PricePerPound = price,
+            PricePerBag = price,
             StockQuantity = stock,
             FlavorNotes = flavorNotes,
             ImageUrl = string.IsNullOrEmpty(imageUrl) ? "" : imageUrl,
@@ -149,8 +149,8 @@ Main Menu:
         Console.WriteLine($"\n✓ Coffee added successfully!");
         Console.WriteLine($"  ID: {coffee.Id}");
         Console.WriteLine($"  Name: {coffee.Name}");
-        Console.WriteLine($"  Price: ${coffee.PricePerPound:F2}/lb");
-        Console.WriteLine($"  Stock: {coffee.StockQuantity} lbs");
+        Console.WriteLine($"  Price: ${coffee.PricePerBag:F2}/bag");
+        Console.WriteLine($"  Stock: {coffee.StockQuantity} bags");
 
         Console.Write("\nSync to API now? (y/n): ");
         var sync = Console.ReadLine()?.ToLower();
@@ -177,7 +177,7 @@ Main Menu:
         for (int i = 0; i < inventory.Coffees.Count; i++)
         {
             var c = inventory.Coffees[i];
-            Console.WriteLine($"{i + 1}. {c.Name} (Current stock: {c.StockQuantity} lbs) [ID: {c.Id}]");
+            Console.WriteLine($"{i + 1}. {c.Name} (Current stock: {c.StockQuantity} bags) [ID: {c.Id}]");
         }
 
         Console.Write("\nEnter coffee number or ID: ");
@@ -216,8 +216,8 @@ Main Menu:
         await DataStore.SaveInventoryAsync(inventoryPath, inventory);
 
         Console.WriteLine($"\n✓ Stock updated for '{coffee.Name}'");
-        Console.WriteLine($"  Old stock: {oldStock} lbs");
-        Console.WriteLine($"  New stock: {newStock} lbs");
+        Console.WriteLine($"  Old stock: {oldStock} bags");
+        Console.WriteLine($"  New stock: {newStock} bags");
 
         Console.Write("\nSync to API now? (y/n): ");
         var sync = Console.ReadLine()?.ToLower();
@@ -245,8 +245,8 @@ Main Menu:
             Console.WriteLine($"[{coffee.Id}] {coffee.Name} - {availability}");
             Console.WriteLine($"  Origin: {coffee.Origin}");
             Console.WriteLine($"  Roast: {coffee.RoastLevel}");
-            Console.WriteLine($"  Price: ${coffee.PricePerPound:F2}/lb");
-            Console.WriteLine($"  Stock: {coffee.StockQuantity} lbs");
+            Console.WriteLine($"  Price: ${coffee.PricePerBag:F2}/bag");
+            Console.WriteLine($"  Stock: {coffee.StockQuantity} bags");
             if (!string.IsNullOrEmpty(coffee.Description))
             {
                 Console.WriteLine($"  Description: {coffee.Description}");
@@ -279,7 +279,7 @@ Main Menu:
         for (int i = 0; i < availableCoffees.Count; i++)
         {
             var c = availableCoffees[i];
-            Console.WriteLine($"{i + 1}. {c.Name} - ${c.PricePerPound:F2}/lb (Stock: {c.StockQuantity} lbs)");
+            Console.WriteLine($"{i + 1}. {c.Name} - ${c.PricePerBag:F2}/bag (Stock: {c.StockQuantity} bags)");
         }
 
         Console.Write("\nSelect coffee number: ");
@@ -293,10 +293,10 @@ Main Menu:
 
         var coffee = availableCoffees[index - 1];
 
-        Console.Write($"Quantity to sell (lbs, max {coffee.StockQuantity}): ");
+        Console.Write($"Quantity to sell (bags, max {coffee.StockQuantity}): ");
         var quantityStr = Console.ReadLine()?.Trim();
 
-        if (!double.TryParse(quantityStr, out var quantity) || quantity <= 0 || quantity > coffee.StockQuantity)
+        if (!int.TryParse(quantityStr, out var quantity) || quantity <= 0 || quantity > coffee.StockQuantity)
         {
             Console.WriteLine("Invalid quantity.");
             return;
@@ -308,9 +308,9 @@ Main Menu:
             Id = DataStore.GenerateId(),
             CoffeeId = coffee.Id,
             CoffeeName = coffee.Name,
-            QuantityPounds = quantity,
-            PricePerPound = coffee.PricePerPound,
-            TotalPrice = quantity * coffee.PricePerPound,
+            QuantityBags = quantity,
+            PricePerBag = coffee.PricePerBag,
+            TotalPrice = quantity * coffee.PricePerBag,
             OrderDate = DateTime.UtcNow
         };
 
@@ -318,7 +318,7 @@ Main Menu:
         await DataStore.SaveOrdersAsync(ordersPath, orders);
 
         // Update inventory
-        coffee.StockQuantity -= (int)Math.Ceiling(quantity);
+        coffee.StockQuantity -= quantity;
         coffee.IsAvailable = coffee.StockQuantity > 0;
         coffee.UpdatedAt = DateTime.UtcNow;
         await DataStore.SaveInventoryAsync(inventoryPath, inventory);
@@ -326,9 +326,9 @@ Main Menu:
         Console.WriteLine($"\n✓ Order recorded successfully!");
         Console.WriteLine($"  Order ID: {order.Id}");
         Console.WriteLine($"  Coffee: {coffee.Name}");
-        Console.WriteLine($"  Quantity: {quantity:F2} lbs");
+        Console.WriteLine($"  Quantity: {quantity} bags");
         Console.WriteLine($"  Total: ${order.TotalPrice:F2}");
-        Console.WriteLine($"  Remaining stock: {coffee.StockQuantity} lbs");
+        Console.WriteLine($"  Remaining stock: {coffee.StockQuantity} bags");
 
         Console.Write("\nSync inventory to API now? (y/n): ");
         var sync = Console.ReadLine()?.ToLower();
@@ -356,7 +356,7 @@ Main Menu:
         {
             var c = inventory.Coffees[i];
             var status = c.IsAvailable ? "✓ AVAILABLE" : "✗ UNAVAILABLE";
-            Console.WriteLine($"{i + 1}. {c.Name} [{status}] (Stock: {c.StockQuantity} lbs) [ID: {c.Id}]");
+            Console.WriteLine($"{i + 1}. {c.Name} [{status}] (Stock: {c.StockQuantity} bags) [ID: {c.Id}]");
         }
 
         Console.Write("\nEnter coffee number or ID: ");
@@ -416,14 +416,14 @@ Main Menu:
         }
 
         var totalRevenue = recentOrders.Sum(o => o.TotalPrice);
-        var totalPounds = recentOrders.Sum(o => o.QuantityPounds);
+        var totalBags = recentOrders.Sum(o => o.QuantityBags);
 
         Console.WriteLine($"\nSummary:");
         Console.WriteLine($"  Total Orders: {recentOrders.Count}");
         Console.WriteLine($"  Total Revenue: ${totalRevenue:F2}");
-        Console.WriteLine($"  Total Pounds Sold: {totalPounds:F2} lbs");
+        Console.WriteLine($"  Total Bags Sold: {totalBags}");
         Console.WriteLine($"  Average Order Value: ${(totalRevenue / recentOrders.Count):F2}");
-        Console.WriteLine($"  Average Pounds per Order: {(totalPounds / recentOrders.Count):F2} lbs");
+        Console.WriteLine($"  Average Bags per Order: {(totalBags / (double)recentOrders.Count):F2}");
 
         // Sales by coffee
         var salesByCoffee = recentOrders
@@ -432,7 +432,7 @@ Main Menu:
             {
                 Name = g.Key,
                 OrderCount = g.Count(),
-                TotalPounds = g.Sum(o => o.QuantityPounds),
+                TotalBags = g.Sum(o => o.QuantityBags),
                 TotalRevenue = g.Sum(o => o.TotalPrice)
             })
             .OrderByDescending(s => s.TotalRevenue)
@@ -444,7 +444,7 @@ Main Menu:
         {
             Console.WriteLine($"\n{sale.Name}");
             Console.WriteLine($"  Orders: {sale.OrderCount}");
-            Console.WriteLine($"  Total Pounds: {sale.TotalPounds:F2} lbs");
+            Console.WriteLine($"  Total Bags: {sale.TotalBags}");
             Console.WriteLine($"  Total Revenue: ${sale.TotalRevenue:F2}");
             Console.WriteLine($"  Avg per Order: ${(sale.TotalRevenue / sale.OrderCount):F2}");
         }
@@ -455,7 +455,7 @@ Main Menu:
         foreach (var order in recentOrders.OrderByDescending(o => o.OrderDate).Take(10))
         {
             Console.WriteLine($"{order.OrderDate:MMM dd, yyyy HH:mm} - {order.CoffeeName}");
-            Console.WriteLine($"  {order.QuantityPounds:F2} lbs @ ${order.PricePerPound:F2}/lb = ${order.TotalPrice:F2}");
+            Console.WriteLine($"  {order.QuantityBags} bags @ ${order.PricePerBag:F2}/bag = ${order.TotalPrice:F2}");
         }
     }
 
