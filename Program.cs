@@ -38,6 +38,9 @@ else
         case "sync":
             await Commands.SyncToApiAsync(commandArgs);
             break;
+        case "pull":
+            await Commands.PullFromApiAsync(commandArgs);
+            break;
         case "help":
             Commands.ShowHelp();
             break;

@@ -19,7 +19,8 @@ Commands:
   list                - List all coffees
   order               - Record a sale/order
   report              - Show sales report
-  sync                - Manually sync inventory to API
+  sync                - Push local inventory to API
+  pull                - Pull inventory from API to local
   help                - Show this help message
 
 Options:
@@ -35,6 +36,7 @@ Examples:
   CoffeeManagementSoftware list
   CoffeeManagementSoftware order <coffee-id> --quantity 2
   CoffeeManagementSoftware report --days 30
+  CoffeeManagementSoftware pull
   CoffeeManagementSoftware sync
 ");
     }
@@ -324,6 +326,36 @@ Examples:
         }
 
         await ApiSync.SyncInventoryAsync(inventory);
+    }
+
+    public static async Task PullFromApiAsync(string[] commandArgs)
+    {
+        var inventoryPath = DataStore.GetInventoryPath(commandArgs);
+        var inventory = await DataStore.LoadInventoryAsync(inventoryPath);
+
+        Console.WriteLine("Testing API connection...");
+        var connected = await ApiSync.TestConnectionAsync(inventory.ApiUrl);
+
+        if (!connected)
+        {
+            Console.WriteLine($"Error: Could not connect to API at {inventory.ApiUrl}");
+            return;
+        }
+
+        // Warn about overwriting local data
+        if (inventory.Coffees.Count > 0)
+        {
+            Console.WriteLine($"\n⚠️  WARNING: This will replace your {inventory.Coffees.Count} local coffees with data from the API!");
+            Console.Write("Continue? (y/n): ");
+            var confirm = Console.ReadLine()?.ToLower();
+            if (confirm != "y" && confirm != "yes")
+            {
+                Console.WriteLine("Pull cancelled.");
+                return;
+            }
+        }
+
+        await ApiSync.PullInventoryAsync(inventory, inventoryPath);
     }
 
     public static async Task ToggleAvailabilityAsync(string[] commandArgs)
